@@ -348,3 +348,43 @@ table.rates small {
 [hidden] {
   display: none !important;
 }
+
+.fail-text {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.banner-warn {
+  background: var(--warn);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.ladder th,
+table.ladder td {
+  overflow-wrap: normal;
+}
+
+table.ladder td:first-child {
+  white-space: nowrap;
+}
+
+table.ladder td:nth-child(2) {
+  white-space: normal;
+  font-weight: 400;
+}
+
+table.ladder td:nth-child(3) {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+table.ladder td small {
+  white-space: normal;
+}
+
+table.ladder {
+  font-size: 0.9rem;
+}

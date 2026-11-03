@@ -6,8 +6,14 @@
  * UTF-8 avec BOM (Excel l'ouvre directement, Google Sheets aussi).
  */
 import { formatBytes, formatDuration, formatRate } from './format';
+import { analysisLines, architectureVerdict } from './verdict';
 
-export type ResultKind = 'OK' | 'ECHEC' | 'NON DISPONIBLE' | 'INFO';
+export { architectureVerdict, computeVerdict, CRITICAL_TESTS } from './verdict';
+
+/** « À VÉRIFIER » : ni réussi ni échoué, il faut un geste (ex. confirmer l'accès). */
+export type ResultKind = 'OK' | 'ECHEC' | 'NON DISPONIBLE' | 'INFO' | 'À VÉRIFIER';
+
+export const RESULT_KINDS: readonly ResultKind[] = ['OK', 'ECHEC', 'NON DISPONIBLE', 'INFO', 'À VÉRIFIER'];
 
 export interface JournalEntry {
   /** Horodatage ISO 8601. */
@@ -97,7 +103,8 @@ export function isJournalEntry(value: unknown): value is JournalEntry {
     numOrNull(v.bytes) &&
     numOrNull(v.ms) &&
     numOrNull(v.rate) &&
-    (v.result === 'OK' || v.result === 'ECHEC' || v.result === 'NON DISPONIBLE' || v.result === 'INFO') &&
+    typeof v.result === 'string' &&
+    (RESULT_KINDS as readonly string[]).includes(v.result) &&
     typeof v.detail === 'string'
   );
 }
@@ -156,6 +163,8 @@ export function buildSummary(entries: readonly JournalEntry[], ctx: SummaryConte
   lines.push(`Mesures enregistrées : ${entries.length}`);
   lines.push('');
   lines.push(architectureVerdict(entries));
+  lines.push('Analyse :');
+  for (const line of analysisLines(entries)) lines.push(`  - ${line}`);
   for (const step of [0, 1, 2, 3, 4, 5]) {
     const latest = new Map<string, JournalEntry>();
     for (const entry of entries) if (entry.step === step) latest.set(`${entry.test}|${entry.param}`, entry);
@@ -168,28 +177,4 @@ export function buildSummary(entries: readonly JournalEntry[], ctx: SummaryConte
     for (const entry of latest.values()) lines.push(`  ${describeEntry(entry)}`);
   }
   return `${lines.join('\n')}\n`;
-}
-
-/** Tests dont l'échec remet l'architecture en cause (section 4 du brief). */
-export const CRITICAL_TESTS = {
-  cardRead: { step: 1, test: 'lecture plus gros fichier' },
-  ssdWrite: { step: 2, test: 'écriture fichier d\'essai' },
-  ssdVerify: { step: 2, test: 'relecture et empreinte' },
-} as const;
-
-/**
- * Verdict global : l'architecture tient si la carte se lit (étape 1) et le SSD
- * s'écrit et se relit à l'identique (étape 2). Se fonde sur la dernière mesure.
- */
-export function architectureVerdict(entries: readonly JournalEntry[]): string {
-  const last = (step: number, test: string) => [...entries].reverse().find((e) => e.step === step && e.test === test);
-  const card = last(CRITICAL_TESTS.cardRead.step, CRITICAL_TESTS.cardRead.test);
-  const write = last(CRITICAL_TESTS.ssdWrite.step, CRITICAL_TESTS.ssdWrite.test);
-  const verify = last(CRITICAL_TESTS.ssdVerify.step, CRITICAL_TESTS.ssdVerify.test);
-  const failed = [card, write, verify].some((e) => e !== undefined && e.result !== 'OK' && e.result !== 'INFO');
-  if (failed) return 'VERDICT : architecture à revoir (lecture de la carte ou écriture sur le SSD en échec).';
-  if (card?.result === 'OK' && write?.result === 'OK' && verify?.result === 'OK') {
-    return 'VERDICT : architecture validée (carte lue, SSD écrit et relu à l\'identique).';
-  }
-  return 'VERDICT : incomplet (étapes 1 et 2 à terminer).';
 }

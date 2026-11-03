@@ -4,7 +4,7 @@
  * Au chargement, la page relit les poignées enregistrées et affiche leur état
  * sans rien demander.
  */
-import { errorDetail } from './analysis';
+import { errorDetail, loadCheckResult, PERMISSION_PROMPT_MESSAGE } from './analysis';
 import { CARD_KEY, runTest, SSD_KEY, state, TEST_DIR } from './context';
 import { formatDuration } from './format';
 import { measureRead, streamChunks } from './ops';
@@ -114,8 +114,12 @@ export function createPersistenceStep(): Step {
         }
         const permission = await handle.queryPermission({ mode });
         const check = await checkHandle(handle, mode);
-        rows.push([label, h('span', {}, badge(STATE_KIND[check.state], check.state), ` « ${handle.name} », autorisation ${permission}. ${check.message}${check.errorName ? ` (${check.errorName})` : ''}`)]);
-        state.journal.add({ step: STEP, test: `état au chargement ${label}`, param: mode, result: check.state === 'ok' ? 'OK' : 'ECHEC', detail: `nom=${handle.name} permission=${permission} état=${check.state}${check.errorName ? ` erreur=${check.errorName}` : ''}` });
+        const result = loadCheckResult(check.state);
+        // Sans geste de l'utilisateur, Chrome ne peut pas redonner l'accès : « prompt » est normal.
+        const message = check.state === 'permission-needed' ? `${PERMISSION_PROMPT_MESSAGE}.` : check.message;
+        const kind = result === 'À VÉRIFIER' ? 'warn' : STATE_KIND[check.state];
+        rows.push([label, h('span', {}, badge(kind, result === 'À VÉRIFIER' ? 'À vérifier' : check.state), ` « ${handle.name} », autorisation ${permission}. ${message}${check.errorName ? ` (${check.errorName})` : ''}`)]);
+        state.journal.add({ step: STEP, test: `état au chargement ${label}`, param: mode, result, detail: `nom=${handle.name} permission=${permission} état=${check.state}${check.errorName ? ` erreur=${check.errorName}` : ''}${result === 'À VÉRIFIER' ? ` ; ${PERMISSION_PROMPT_MESSAGE}` : ''}` });
       } catch (error) {
         rows.push([label, `lecture impossible (${errorDetail(error)})`]);
         state.journal.add({ step: STEP, test: `état au chargement ${label}`, result: 'ECHEC', detail: errorDetail(error) });

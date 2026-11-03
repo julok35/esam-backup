@@ -87,6 +87,27 @@ describe('verdict et résumé', () => {
     expect(architectureVerdict([entry({ step: 1, test: 'lecture plus gros fichier', result: 'ECHEC' }), ...ok])).toContain('validée');
   });
 
+  it('accepte le résultat À VÉRIFIER', () => {
+    expect(parseJournal(JSON.stringify([entry({ result: 'À VÉRIFIER' }), entry({ result: 'BIZARRE' as JournalEntry['result'] })]))).toHaveLength(1);
+  });
+
+  it("met l'analyse sous le verdict", () => {
+    const text = buildSummary(
+      [
+        ...ok.slice(0, 1),
+        entry({ step: 2, test: 'écriture par paliers', param: 'palier 64 Mo, essai 1', bytes: 64 * 1048576, ms: 800, detail: `cible=${64 * 1048576}, close 320 ms` }),
+        entry({ step: 2, test: 'écriture par paliers', param: 'palier 128 Mo, essai 2', bytes: 64 * 1048576, ms: 900, result: 'ECHEC', detail: `phase=écriture, écrits=${64 * 1048576}, cible=${128 * 1048576}` }),
+      ],
+      { now: new Date(2026, 10, 3, 9, 0), device: 'SM-S928B, Chrome 156', build: 'abc' },
+    );
+    const lines = text.split('\n');
+    const verdict = lines.findIndex((l) => l.startsWith('VERDICT'));
+    expect(lines[verdict]).toContain('écriture limitée en taille');
+    expect(lines[verdict + 1]).toBe('Analyse :');
+    expect(lines[verdict + 2]).toContain('plus grande écriture réussie 64,0 Mo ; plus petite en échec 128,0 Mo (phase écriture, après 64,0 Mo écrits)');
+    expect(text).toContain('Persistance : pas encore testée.');
+  });
+
   it('résume chaque étape avec la dernière mesure de chaque test', () => {
     const text = buildSummary([...ok, entry({ step: 3, test: 'a lecture seule', bytes: 100 * 1048576, ms: 1000, rate: 100 }), entry({ step: 3, test: 'a lecture seule', bytes: 100 * 1048576, ms: 500, rate: 200 })], {
       now: new Date(2026, 10, 3, 9, 0),

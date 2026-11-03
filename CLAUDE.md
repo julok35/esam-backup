@@ -136,6 +136,7 @@ Source : GitHub Actions).
   l'écriture sur le SSD échoue, arrêter : l'architecture est à revoir.
   Page de test livrée (`test/`, `src/test-page/`, protocole
   `docs/etape-0-tests-manuels.md`) : résultats du S24 Ultra attendus (CSV).
+  Premiers résultats du 03/11 : lecture OK, écriture 1 Mo OK, 1 Go en échec, move absent, confirmation d'accès à chaque ouverture (test par paliers ajouté pour trouver la limite).
 - [ ] Lots 1 à 7, dans l'ordre, chacun utilisable seul.
 
 Points à lever à l'étape 0 : identification des cartes sans identifiant de volume,

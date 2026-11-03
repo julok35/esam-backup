@@ -88,8 +88,18 @@ export function createCardStep(fallbackOpen: boolean): Step {
       state.journal.add({ step: STEP, test: 'choix dossier carte', param: 'mode read', result: aborted ? 'INFO' : 'ECHEC', detail: errorDetail(error) });
       return false;
     }
-    state.card = { handle, source: new ReadOnlySource(handle), scan: null };
-    state.journal.add({ step: STEP, test: 'choix dossier carte', param: 'mode read', result: 'OK', detail: `nom=${handle.name} startIn=${startIn}` });
+    const source = new ReadOnlySource(handle);
+    state.card = { handle, source, scan: null };
+    // Premières entrées du dossier choisi : pour comprendre ce qu'est un dossier nommé « media ».
+    let topLevel: string;
+    try {
+      const top = await source.list('');
+      const names = top.slice(0, 10).map((e) => (e.kind === 'directory' ? `${e.name}/` : e.name));
+      topLevel = `premier niveau (${top.length} entrées) : ${names.join(' | ') || 'vide'}${top.length > 10 ? ' | ...' : ''}`;
+    } catch (error) {
+      topLevel = `premier niveau illisible : ${errorDetail(error)}`;
+    }
+    state.journal.add({ step: STEP, test: 'choix dossier carte', param: 'mode read', result: 'OK', detail: `nom=${handle.name} startIn=${startIn} ; ${topLevel}` });
     try {
       await saveHandle(CARD_KEY, handle);
       state.journal.add({ step: 5, test: 'enregistrement poignée carte', result: 'OK', detail: handle.name });
@@ -116,7 +126,13 @@ export function createCardStep(fallbackOpen: boolean): Step {
       { racine: scan.rootName, startIn, erreurs: scan.errors, fichiers: scan.files.slice(0, 200), tronque: scan.files.length > 200 },
     );
     readButton.hidden = biggest === null;
-    if (biggest) readButton.textContent = `Lire en entier le plus gros fichier (${formatBytes(biggest.size)})`;
+    if (biggest) {
+      readButton.textContent = `Lire en entier le plus gros fichier (${formatBytes(biggest.size)})`;
+      // Une seule action principale : la lecture passe devant, le choix devient secondaire.
+      pickButton.classList.remove('btn-primary');
+      pickButton.textContent = 'Rechoisir le dossier de la carte';
+      readButton.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
     step.setStatus(scan.files.length > 0 ? 'warn' : 'fail', scan.files.length > 0 ? 'Lecture à faire' : 'Vide');
     return true;
   }

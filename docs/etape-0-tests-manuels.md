@@ -7,9 +7,26 @@ et écrire sur le SSD branchés au téléphone, mesurer les débits, voir commen
 reconnaître une carte et si le téléphone se souvient des dossiers choisis.
 Section 4 du brief.
 
-**Critère d'arrêt : si l'étape 1 (lecture de la carte) ou l'étape 2 (écriture sur
-le SSD) échoue, l'architecture est à revoir.** Arrêter les tests, exporter le CSV
-et le signaler avant d'écrire la moindre ligne des lots suivants.
+**Critère d'arrêt : si l'étape 1 (lecture de la carte) échoue, ou si aucune
+écriture sur le SSD ne réussit à l'étape 2, l'architecture est à revoir.** Arrêter
+les tests, exporter le CSV et le signaler avant d'écrire la moindre ligne des lots
+suivants.
+
+### Lire le bandeau en haut de la page
+
+| Bandeau | Sens | Que faire |
+|---|---|---|
+| Aucun | Rien de bloquant pour l'instant | Continuer les étapes |
+| Rouge « L'architecture est à revoir » | Carte illisible, ou aucune écriture réussie sur le SSD | Rebrancher, rechoisir le dossier, refaire une fois ; si l'échec persiste, arrêter et envoyer le CSV |
+| Orange « Écriture limitée en taille : à analyser » | De petites écritures réussissent (reprise de 1 Mo, premiers paliers) mais une plus grosse échoue. Le bandeau donne la plus grande taille réussie et la plus petite en échec | Pas d'arrêt : faire « Chercher la taille limite » (étape 2), finir les autres étapes, puis envoyer le CSV et le résumé. La suite (morceler les gros fichiers, autre méthode d'écriture) se décide sur ces mesures |
+
+Premiers résultats (03/11, S24 Ultra, Chrome 156, SSD exFAT « 5298-D0F1 ») :
+lecture de la carte OK (dossier nommé « media »), ajout de 1 Mo à un fichier OK,
+écriture d'un fichier de 1 Go en échec (NoModificationAllowedError), move()
+absent, accès redemandé par Chrome à chaque ouverture de la page. Piste : sur
+Android, Chrome écrit d'abord dans son cache interne puis recopie le fichier vers
+le SSD au close() (ticket Chromium 40101963) ; le test par paliers sert à trouver
+la taille limite et la phase de l'échec.
 
 ## Prérequis
 
@@ -59,8 +76,12 @@ Gestes :
 
 1. Brancher hub, lecteur et carte.
 2. « Choisir le dossier de la carte », choisir la racine de la carte (si Chrome
-   refuse, choisir DCIM), accepter l'accès.
-3. Lire le résultat du parcours, puis « Lire en entier le plus gros fichier ».
+   refuse, choisir DCIM), accepter l'accès. Le parcours complet se lance tout
+   seul ; le journal note les 10 premières entrées du dossier choisi (pour savoir
+   ce qu'est un dossier nommé « media »).
+3. Lire le résultat du parcours, puis appuyer sur le bouton principal « Lire en
+   entier le plus gros fichier » (ne pas l'oublier : c'est le test qui compte pour
+   le verdict).
 
 À noter : nom du dossier affiché, nombre de fichiers, volume total, extensions
 (MP4, JPG, R-JPEG, SRT, LRF attendues pour le M30T), durée du parcours, débit de
@@ -82,20 +103,44 @@ Gestes :
 2. « Choisir le dossier du SSD » (la racine convient), accepter l'accès en
    écriture.
 3. Taille 1 Go, morceaux 8 Mo : « Écrire puis relire le fichier d'essai ».
-4. Recommencer avec 4 Go (vérifie que le SSD est bien en exFAT : en FAT32
-   l'écriture échoue vers 4 Go).
-5. « Tester renommage et reprise ».
+   En cas d'échec, la page dit en clair « Échec pendant la phase X, après Y Mo
+   écrits en Z s » (phase : ouverture, écriture, close ou relecture) et donne le
+   nom de l'exception : le noter.
+4. « Chercher la taille limite » (morceaux 8 Mo). La page écrit des fichiers de
+   1 Mo, 16 Mo, 64 Mo, 128 Mo, 256 Mo, 512 Mo puis 1 Go dans
+   `ESAM_test_etape0/` (fichiers `palier_<taille>.bin`). Au premier échec, elle
+   réessaie une fois le même palier puis s'arrête. Compter jusqu'à 15 minutes ;
+   garder l'écran allumé. Au palier de 16 Mo, elle mesure aussi trois façons
+   d'ouvrir un fichier neuf (keepExistingData faux, keepExistingData vrai,
+   mode exclusif si Chrome le connaît). Si un palier de 256 Mo ou plus réussit,
+   elle mesure le temps d'ouverture d'une reprise sur ce fichier. À la fin, les
+   fichiers de palier sont supprimés, sauf le dernier en échec, laissé pour
+   inspection (regarder sa taille dans l'explorateur de fichiers du téléphone).
+5. Si l'écriture de 1 Go a réussi : recommencer l'étape 3 avec 4 Go (vérifie que
+   le SSD est bien en exFAT : en FAT32 l'écriture échoue vers 4 Go).
+6. « Tester renommage et reprise » : renommage d'un dossier, ajout de 1 Mo à un
+   fichier existant, et temps d'ouverture d'une reprise sur un fichier de 256 Mo
+   ou plus s'il en existe un.
 
 À noter : débit d'écriture (jusqu'au close inclus), durée du close() à part,
-débit de relecture, empreintes identiques ou non ; pour 4 Go, réussite ou
-erreur ; renommage possible ou non ; temps d'ouverture de la reprise sur un
-fichier de 1 ou 4 Go.
+débit de relecture, empreintes identiques ou non ; tableau des paliers (OK ou
+échec, débit, part du close()), phase et octets écrits au premier échec, second
+essai réussi ou non ; phrase sur le close() (« proportionnel à la taille » =
+Chrome recopie le fichier de son cache vers le SSD au close()) ; variantes du
+palier de 16 Mo ; renommage possible ou non ; temps d'ouverture de la reprise
+sur un gros fichier (« recopie probable » ou « rapide »).
 
 Réussite : fichiers de 1 Go et 4 Go écrits puis relus avec des empreintes
-identiques (badge OK). Un close() très long (plus de 20 % du temps d'écriture)
-n'est pas un échec mais doit être noté : il influence la reprise des imports.
+identiques (badge OK), tous les paliers OK. Un close() très long (plus de 20 %
+du temps d'écriture) n'est pas un échec mais doit être noté : il influence la
+reprise des imports.
 
-**Échec de l'écriture ou empreintes différentes = arrêt** (architecture à
+Écriture limitée (badge orange « Écriture limitée », bandeau orange) : pas
+d'arrêt. Finir les étapes 3 à 5 avec des tailles qui passent, puis envoyer le
+CSV et le résumé : la plus grande taille réussie, la plus petite en échec et sa
+phase décident de la suite (morceler les gros fichiers ou changer de méthode).
+
+**Aucune écriture réussie ou empreintes différentes = arrêt** (architecture à
 revoir), après un second essai avec le SSD rebranché.
 
 ### Étape 3 - Débits
@@ -143,7 +188,9 @@ Scénarios, dans l'ordre :
 1. Débrancher et rebrancher la carte.
 2. Débrancher et rebrancher le SSD.
 3. Recharger la page : avant d'appuyer sur un bouton, noter l'état affiché tout
-   seul en haut de l'étape 5.
+   seul en haut de l'étape 5. « À vérifier » (autorisation prompt) est normal :
+   Chrome demande une confirmation à chaque ouverture, appuyer sur « Vérifier
+   maintenant » et accepter. Seul « inutilisable » après cet appui est un échec.
 4. Fermer Chrome et le rouvrir : même chose.
 5. Redémarrer le téléphone (facultatif).
 
@@ -179,11 +226,15 @@ Carte (marque, taille) : ............ SSD (modèle, système de fichiers) : ....
 | 1 | Extensions M30T trouvées | | | |
 | 1 | Lecture du plus gros fichier | | Mo/s : | |
 | 2 | Choix du dossier du SSD | | nom : | |
-| 2 | Écriture 1 Go | | Mo/s : close : | |
+| 2 | Écriture 1 Go | | Mo/s : close : phase de l'échec : | |
+| 2 | Taille limite (paliers) | | plus grande réussie : plus petite en échec : | |
+| 2 | Part du close(), proportionnel ou non | | | |
+| 2 | Variantes 16 Mo (neuf, keep, exclusif) | | | |
 | 2 | Relecture 1 Go, empreintes | | Mo/s : | |
 | 2 | Écriture et relecture 4 Go (exFAT) | | Mo/s : | |
 | 2 | Renommage d'un dossier (move) | | | |
-| 2 | Reprise (keepExistingData) | | ouverture : | |
+| 2 | Reprise (keepExistingData) 1 Mo | | ouverture : | |
+| 2 | Reprise sur fichier de 256 Mo ou plus | | ouverture : | |
 | 3 | Morceau 1 Mo : a / b / c / d | | | |
 | 3 | Morceau 4 Mo : a / b / c / d | | | |
 | 3 | Morceau 16 Mo : a / b / c / d | | | |

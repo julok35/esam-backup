@@ -9,7 +9,7 @@ import { canShareCsv, copyText, downloadCsv, shareCsv } from './journal';
 import { actionButton, badge, errorBlock, resultArea, type StatusKind } from './ui';
 import { h, render } from '../ui/dom';
 
-const RESULT_KIND: Record<string, StatusKind> = { OK: 'ok', ECHEC: 'fail', 'NON DISPONIBLE': 'na', INFO: 'todo' };
+const RESULT_KIND: Record<string, StatusKind> = { OK: 'ok', ECHEC: 'fail', 'NON DISPONIBLE': 'na', INFO: 'todo', 'À VÉRIFIER': 'warn' };
 
 export function createJournalSection(): HTMLElement {
   const count = h('span', { class: 'step-status' });

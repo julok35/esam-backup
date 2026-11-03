@@ -5,13 +5,13 @@
  */
 import '../ui/base.css';
 import './test-page.css';
-import { ARCHITECTURE_BANNER, ARCHITECTURE_FAILURE_BANNER, BRAVE_BANNER } from './analysis';
+import { ARCHITECTURE_BANNER, ARCHITECTURE_FAILURE_BANNER, BRAVE_BANNER, WRITE_LIMIT_BANNER } from './analysis';
 import { createCapabilitiesStep } from './capabilities';
 import { createCardStep } from './card-tests';
 import { state, TEST_DIR } from './context';
 import { createIdentityStep } from './identity';
 import { createJournalSection } from './journal-ui';
-import { architectureVerdict } from './journal-format';
+import { computeVerdict } from './journal-format';
 import { createPersistenceStep } from './persistence';
 import { createSsdStep } from './ssd-tests';
 import { createThroughputStep } from './throughput';
@@ -24,11 +24,19 @@ const banner = h('div', { class: 'banner', role: 'alert', hidden: true });
 const capabilities = createCapabilitiesStep();
 
 function updateBanner(): void {
-  const verdict = architectureVerdict(state.journal.entries);
+  const verdict = computeVerdict(state.journal.entries);
   let text = '';
+  let warn = false;
   if (capabilities.verdict.blocking && capabilities.brave) text = BRAVE_BANNER;
   else if (capabilities.verdict.blocking) text = ARCHITECTURE_BANNER;
-  else if (verdict.includes('à revoir')) text = ARCHITECTURE_FAILURE_BANNER;
+  else if (verdict.kind === 'rework') text = ARCHITECTURE_FAILURE_BANNER;
+  else if (verdict.kind === 'limited') {
+    // Orange et non rouge : de petites écritures passent, la limite reste à comprendre.
+    warn = true;
+    const head = verdict.text.replace(/^VERDICT : /, '');
+    text = `${head.charAt(0).toUpperCase()}${head.slice(1)} ${WRITE_LIMIT_BANNER}`;
+  }
+  banner.classList.toggle('banner-warn', warn);
   banner.hidden = text === '';
   banner.textContent = text;
 }

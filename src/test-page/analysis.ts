@@ -138,6 +138,11 @@ export function adviceFor(name: string): string {
  * (src/storage), on remonte à l'exception du navigateur qu'elle enveloppe.
  */
 export function errorInfo(error: unknown): ErrorInfo {
+  // Une MeasureError (failure.ts) enveloppe l'erreur d'origine : on la remonte d'abord.
+  if (typeof error === 'object' && error !== null && 'name' in error && (error as { name: unknown }).name === 'MeasureError') {
+    const cause = (error as { cause?: unknown }).cause;
+    if (cause !== undefined) return errorInfo(cause);
+  }
   let target: unknown = error;
   if (typeof error === 'object' && error !== null && 'name' in error && (error as { name: unknown }).name === 'StorageError') {
     const cause = (error as { cause?: unknown }).cause;
@@ -193,10 +198,28 @@ export const BRAVE_BANNER =
   "Ce navigateur est Brave : il désactive volontairement le choix de dossier, même s'il se présente comme Chrome. Ce n'est pas un verdict sur l'architecture. Refaites l'étape 0 dans Google Chrome.";
 
 export const ARCHITECTURE_FAILURE_BANNER =
-  "L'architecture est à revoir. La lecture de la carte ou l'écriture sur le SSD a échoué (voir l'étape en rouge). Si l'échec se reproduit après avoir rebranché et rechoisi le dossier, arrêtez l'étape 0 et signalez-le avec l'export CSV.";
+  "L'architecture est à revoir. La lecture de la carte a échoué, ou aucune écriture sur le SSD n'a réussi (voir l'étape en rouge). Si l'échec se reproduit après avoir rebranché et rechoisi le dossier, arrêtez l'étape 0 et signalez-le avec l'export CSV.";
 
 /** Résumé d'un parcours pour l'affichage brut. */
 export function scanSummaryLines(files: readonly ScannedFile[], dirs: number): string[] {
   const total = files.reduce((sum, f) => sum + f.size, 0);
   return [`${files.length} fichiers, ${dirs} dossiers, ${formatBytes(total)}`, ...extensionStats(files).map((s) => `.${s.ext} : ${s.count} fichier(s), ${formatBytes(s.bytes)}`)];
+}
+
+/** Suite du bandeau orange, après le verdict « écriture limitée » (main.ts). */
+export const WRITE_LIMIT_BANNER =
+  "De petites écritures sur le SSD réussissent mais une plus grosse échoue. Ce n'est pas encore un verdict sur l'architecture : faites « Chercher la taille limite » à l'étape 2 si ce n'est pas fait, puis envoyez le CSV.";
+
+/** Message de l'étape 5 quand Chrome redemande l'accès au chargement (comportement normal). */
+export const PERMISSION_PROMPT_MESSAGE = 'Chrome demande une confirmation à chaque ouverture : appuyez sur Vérifier maintenant';
+
+/**
+ * Résultat de journal pour l'état d'une poignée relue au chargement, sans geste de
+ * l'utilisateur. « permission-needed » est le comportement normal de Chrome (il faut
+ * un appui pour requestPermission) : à vérifier, pas un échec.
+ */
+export function loadCheckResult(handleState: 'ok' | 'permission-needed' | 'missing' | 'unavailable' | 'error'): 'OK' | 'À VÉRIFIER' | 'ECHEC' {
+  if (handleState === 'ok') return 'OK';
+  if (handleState === 'permission-needed') return 'À VÉRIFIER';
+  return 'ECHEC';
 }

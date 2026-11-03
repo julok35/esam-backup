@@ -6,6 +6,7 @@
  */
 import { errorDetail, largestFile, type ScannedFile } from './analysis';
 import { runTest, state, TEST_DIR } from './context';
+import { describeFailure, failureDetail, isMeasureError } from './failure';
 import { formatBytes, formatDuration, formatRateOf, MIB } from './format';
 import { measureCopy, measureRead, measureWritePattern, newSeed } from './ops';
 import { actionButton, choice, createStep, errorBlock, progressArea, resultArea, type Step } from './ui';
@@ -169,10 +170,11 @@ export function createThroughputStep(): Step {
       return true;
     } catch (error) {
       progress.finish();
-      state.journal.add({ step: STEP, test: `${phase} échec`, param, result: 'ECHEC', detail: errorDetail(error) });
-      rows.push({ phase: title, bytes: 0, ms: 0, ok: false, note: ` (${errorDetail(error)})` });
+      const failure = isMeasureError(error) ? error.failure : null;
+      state.journal.add({ step: STEP, test: `${phase} échec`, param, bytes: failure?.bytesWritten ?? null, ms: failure?.elapsedMs ?? null, rate: null, result: 'ECHEC', detail: failure ? failureDetail(failure) : errorDetail(error) });
+      rows.push({ phase: title, bytes: 0, ms: 0, ok: false, note: ` (${failure ? `${describeFailure(failure)}, ` : ''}${errorDetail(error)})` });
       paintTable();
-      result.show('fail', `${title} : échec.`, [errorBlock(error)]);
+      result.show('fail', `${title} : échec.`, [failure ? h('p', { class: 'fail-text' }, `${describeFailure(failure)}.`) : '', errorBlock(error)]);
       return false;
     }
   }

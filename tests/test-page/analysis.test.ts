@@ -10,6 +10,7 @@ import {
   extensionStats,
   isLikelyRJpeg,
   largestFile,
+  loadCheckResult,
   oldestFiles,
   type ScannedFile,
 } from '../../src/test-page/analysis';
@@ -123,5 +124,15 @@ describe('verdict des capacités', () => {
 
   it('ne bloque pas sinon', () => {
     expect(capabilityVerdict([{ id: 'a', label: 'A', level: 'critical', present: true }]).blocking).toBe(false);
+  });
+});
+
+describe('persistance au chargement', () => {
+  it("classe la demande de confirmation en à vérifier, pas en échec", () => {
+    expect(loadCheckResult('permission-needed')).toBe('À VÉRIFIER');
+    expect(loadCheckResult('ok')).toBe('OK');
+    expect(loadCheckResult('missing')).toBe('ECHEC');
+    expect(loadCheckResult('unavailable')).toBe('ECHEC');
+    expect(loadCheckResult('error')).toBe('ECHEC');
   });
 });
