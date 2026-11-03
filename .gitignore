@@ -1,0 +1,26 @@
+# Dépendances
+node_modules/
+
+# Build et caches
+dist/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+coverage/
+
+# Journaux
+npm-debug.log*
+*.log
+
+# Environnement local
+.env
+.env.local
+.env.*.local
+
+# Éditeurs et systèmes
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
