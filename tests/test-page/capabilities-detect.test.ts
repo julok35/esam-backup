@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chromeMajorFromUserAgent, detectCapabilities } from '../../src/test-page/capabilities-detect';
+import { chromeMajorFromUserAgent, detectCapabilities, isBraveBrowser } from '../../src/test-page/capabilities-detect';
 
 const present = (items: ReturnType<typeof detectCapabilities>, id: string) => items.find((i) => i.id === id)?.present;
 
@@ -64,5 +64,18 @@ describe('détection des capacités', () => {
   it('lit la version majeure de Chrome', () => {
     expect(chromeMajorFromUserAgent('Mozilla/5.0 Chrome/142.0.7444.0 Mobile')).toBe(142);
     expect(chromeMajorFromUserAgent('Firefox/130')).toBeNull();
+  });
+});
+
+describe('détection de Brave', () => {
+  it('reconnaît navigator.brave', () => {
+    expect(isBraveBrowser({ navigator: { brave: { isBrave: () => Promise.resolve(true) } } })).toBe(true);
+  });
+  it('reconnaît la marque Brave dans userAgentData', () => {
+    expect(isBraveBrowser({ navigator: { userAgentData: { brands: [{ brand: 'Brave', version: '156' }, { brand: 'Chromium', version: '156' }] } } })).toBe(true);
+  });
+  it('ne confond pas Chrome avec Brave', () => {
+    expect(isBraveBrowser({ navigator: { userAgent: 'Chrome/156.0.0.0', userAgentData: { brands: [{ brand: 'Google Chrome', version: '156' }] } } })).toBe(false);
+    expect(isBraveBrowser({})).toBe(false);
   });
 });

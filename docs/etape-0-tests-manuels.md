@@ -15,7 +15,7 @@ et le signaler avant d'écrire la moindre ligne des lots suivants.
 
 | Élément | Détail | Coché |
 |---|---|---|
-| Téléphone | Samsung S24 Ultra, Chrome à jour (version notée par la page) | [ ] |
+| Téléphone | Samsung S24 Ultra, Google Chrome à jour (version notée par la page). Pas Brave : il désactive le choix de dossier tout en se présentant comme Chrome, la page le signale | [ ] |
 | Batterie | Au moins 50 %, ou chargeur branché sur le port PD du hub | [ ] |
 | Hub | Hub USB-C 3.2 avec port de recharge PD | [ ] |
 | Lecteur | Lexar USB-C (SD et microSD), branché sur le hub | [ ] |

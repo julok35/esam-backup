@@ -189,6 +189,9 @@ export function capabilityVerdict(items: readonly CapabilityItem[]): CapabilityV
 export const ARCHITECTURE_BANNER =
   "L'architecture est à revoir. Ce navigateur ne permet pas de choisir un dossier (showDirectoryPicker absent) : impossible de lire la carte ni d'écrire sur le SSD comme prévu. Arrêtez l'étape 0 et signalez-le. Les tests de repli restent possibles pour mesurer la lecture.";
 
+export const BRAVE_BANNER =
+  "Ce navigateur est Brave : il désactive volontairement le choix de dossier, même s'il se présente comme Chrome. Ce n'est pas un verdict sur l'architecture. Refaites l'étape 0 dans Google Chrome.";
+
 export const ARCHITECTURE_FAILURE_BANNER =
   "L'architecture est à revoir. La lecture de la carte ou l'écriture sur le SSD a échoué (voir l'étape en rouge). Si l'échec se reproduit après avoir rebranché et rechoisi le dossier, arrêtez l'étape 0 et signalez-le avec l'export CSV.";
 

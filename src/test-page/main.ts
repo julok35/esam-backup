@@ -5,7 +5,7 @@
  */
 import '../ui/base.css';
 import './test-page.css';
-import { ARCHITECTURE_BANNER, ARCHITECTURE_FAILURE_BANNER } from './analysis';
+import { ARCHITECTURE_BANNER, ARCHITECTURE_FAILURE_BANNER, BRAVE_BANNER } from './analysis';
 import { createCapabilitiesStep } from './capabilities';
 import { createCardStep } from './card-tests';
 import { state, TEST_DIR } from './context';
@@ -26,7 +26,8 @@ const capabilities = createCapabilitiesStep();
 function updateBanner(): void {
   const verdict = architectureVerdict(state.journal.entries);
   let text = '';
-  if (capabilities.verdict.blocking) text = ARCHITECTURE_BANNER;
+  if (capabilities.verdict.blocking && capabilities.brave) text = BRAVE_BANNER;
+  else if (capabilities.verdict.blocking) text = ARCHITECTURE_BANNER;
   else if (verdict.includes('à revoir')) text = ARCHITECTURE_FAILURE_BANNER;
   banner.hidden = text === '';
   banner.textContent = text;

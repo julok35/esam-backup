@@ -2,7 +2,7 @@
  * Étape 0 : capacités du navigateur, détectées au chargement sans action.
  */
 import { capabilityVerdict, errorDetail, type CapabilityItem, type CapabilityVerdict } from './analysis';
-import { chromeMajorFromUserAgent, detectCapabilities } from './capabilities-detect';
+import { chromeMajorFromUserAgent, detectCapabilities, isBraveBrowser } from './capabilities-detect';
 import { state } from './context';
 import { formatBytes } from './format';
 import { actionButton, badge, createStep, errorBlock, rawBlock, resultArea, type Step } from './ui';
@@ -56,7 +56,9 @@ async function deviceInfo(): Promise<{ label: string; raw: Record<string, unknow
       }
     }
   }
-  const label = `${model || 'modèle inconnu'}, Chrome ${chromeFull || chrome || '?'}`;
+  const brave = isBraveBrowser(globalThis as unknown as Record<string, unknown>);
+  raw.brave = brave;
+  const label = `${model || 'modèle inconnu'}, ${brave ? 'Brave (base Chrome ' : 'Chrome '}${chromeFull || chrome || '?'}${brave ? ')' : ''}`;
   return { label, raw };
 }
 
@@ -77,6 +79,8 @@ async function storageInfo(): Promise<Record<string, unknown>> {
 export interface CapabilitiesStep {
   step: Step;
   verdict: CapabilityVerdict;
+  /** Vrai si le navigateur est Brave, qui désactive le choix de dossier. */
+  brave: boolean;
 }
 
 export function createCapabilitiesStep(): CapabilitiesStep {
@@ -98,7 +102,11 @@ export function createCapabilitiesStep(): CapabilitiesStep {
     ),
   );
 
-  if (verdict.blocking) {
+  const brave = isBraveBrowser(globalThis as unknown as Record<string, unknown>);
+  if (verdict.blocking && brave) {
+    step.setStatus('fail', 'Brave');
+    result.show('fail', 'Brave désactive le choix de dossier : refaites le test dans Google Chrome.', ["Ce n'est pas un verdict sur l'architecture : Brave bloque volontairement cette fonction, même s'il se présente comme Chrome."]);
+  } else if (verdict.blocking) {
     step.setStatus('fail', 'Bloquant');
     result.show('fail', "Choix de dossier impossible sur ce navigateur : l'architecture est à revoir.", ['Les tests de repli de l\'étape 1 restent possibles pour mesurer la lecture.']);
   } else if (verdict.missingImportant.length > 0) {
@@ -153,7 +161,7 @@ export function createCapabilitiesStep(): CapabilitiesStep {
       step: 0,
       test: 'capacités',
       param: device.label,
-      result: verdict.blocking ? 'ECHEC' : 'OK',
+      result: verdict.blocking ? (brave ? 'NON DISPONIBLE' : 'ECHEC') : 'OK',
       detail: items
         .filter((i) => i.present !== null)
         .map((i) => `${i.id}=${i.present ? 'oui' : 'non'}`)
@@ -161,5 +169,5 @@ export function createCapabilitiesStep(): CapabilitiesStep {
     });
   })();
 
-  return { step, verdict };
+  return { step, verdict, brave };
 }

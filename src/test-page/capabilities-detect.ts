@@ -89,6 +89,17 @@ export function detectCapabilities(scope: Scope): CapabilityItem[] {
   return items;
 }
 
+/**
+ * Brave se présente comme Chrome dans le userAgent mais désactive les sélecteurs de
+ * l'API File System Access (showDirectoryPicker, showOpenFilePicker). Il se reconnaît à
+ * l'objet `navigator.brave` ou à la marque "Brave" dans userAgentData.brands.
+ */
+export function isBraveBrowser(scope: Record<string, unknown>): boolean {
+  if (get(scope, ['navigator', 'brave']) !== undefined) return true;
+  const brands = get(scope, ['navigator', 'userAgentData', 'brands']);
+  return Array.isArray(brands) && brands.some((b) => typeof b === 'object' && b !== null && /brave/i.test(String((b as { brand?: unknown }).brand ?? '')));
+}
+
 /** Version de Chrome lue dans le userAgent ("Chrome/142.0.0.0"), null si absente. */
 export function chromeMajorFromUserAgent(ua: string): number | null {
   const match = /Chrome\/(\d+)/.exec(ua);
