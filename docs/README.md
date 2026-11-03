@@ -3,6 +3,12 @@
 Ce dossier rassemble la documentation d'usage et de recette. La documentation
 technique pour le développement est dans [`CLAUDE.md`](../CLAUDE.md) à la racine.
 
+## Documents
+
+- [`etape-0-tests-manuels.md`](etape-0-tests-manuels.md) : protocole de l'étape 0
+  sur le S24 Ultra avec la page de test (`/test/`), critères de réussite et
+  d'arrêt, grille de résultats à remplir.
+
 ## Ce qu'on y met
 
 - **Tests manuels par lot**, à faire sur le Samsung S24 Ultra avec le hub, le

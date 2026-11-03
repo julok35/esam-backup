@@ -134,6 +134,8 @@ Source : GitHub Actions).
   de stockage, utilitaires plateforme.
 - [ ] **Étape 0 en cours** : page de test (bloquante). Si la lecture de la carte ou
   l'écriture sur le SSD échoue, arrêter : l'architecture est à revoir.
+  Page de test livrée (`test/`, `src/test-page/`, protocole
+  `docs/etape-0-tests-manuels.md`) : résultats du S24 Ultra attendus (CSV).
 - [ ] Lots 1 à 7, dans l'ordre, chacun utilisable seul.
 
 Points à lever à l'étape 0 : identification des cartes sans identifiant de volume,

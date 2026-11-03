@@ -1,3 +1,58 @@
-// Page de test de l'étape 0 (voir brief, section 4). Réalisée dans une tâche séparée.
-// Point d'entrée de test/index.html : importer ici '../ui/base.css', src/storage et src/platform.
-export {};
+/*
+ * Page de test de l'étape 0 (brief, section 4) : vérifie sur le S24 Ultra que la
+ * carte se lit, que le SSD s'écrit, mesure les débits, l'identification de la
+ * carte et la tenue des poignées. Résultats à l'écran, en CSV et en résumé.
+ */
+import '../ui/base.css';
+import './test-page.css';
+import { ARCHITECTURE_BANNER, ARCHITECTURE_FAILURE_BANNER } from './analysis';
+import { createCapabilitiesStep } from './capabilities';
+import { createCardStep } from './card-tests';
+import { state, TEST_DIR } from './context';
+import { createIdentityStep } from './identity';
+import { createJournalSection } from './journal-ui';
+import { architectureVerdict } from './journal-format';
+import { createPersistenceStep } from './persistence';
+import { createSsdStep } from './ssd-tests';
+import { createThroughputStep } from './throughput';
+import { registerServiceWorker } from '../platform/sw-register';
+import { $, h, render } from '../ui/dom';
+
+const base = import.meta.env.BASE_URL;
+
+const banner = h('div', { class: 'banner', role: 'alert', hidden: true });
+const capabilities = createCapabilitiesStep();
+
+function updateBanner(): void {
+  const verdict = architectureVerdict(state.journal.entries);
+  let text = '';
+  if (capabilities.verdict.blocking) text = ARCHITECTURE_BANNER;
+  else if (verdict.includes('à revoir')) text = ARCHITECTURE_FAILURE_BANNER;
+  banner.hidden = text === '';
+  banner.textContent = text;
+}
+
+render(
+  $('#app'),
+  h('header', { class: 'page-header' }, h('h1', {}, 'Page de test - étape 0'), h('p', { class: 'muted' }, `ESAM Sauvegarde, version ${__BUILD_ID__}`)),
+  banner,
+  h(
+    'div',
+    { class: 'card intro' },
+    h('p', {}, 'Faites les étapes dans l\'ordre, en ouvrant chacune d\'un appui sur son titre. Chaque mesure est notée dans le journal en bas de page, exportable en CSV.'),
+    h('p', { class: 'muted' }, `La carte est toujours ouverte en lecture seule. Sur le SSD, la page n'écrit que dans le dossier ${TEST_DIR}.`),
+  ),
+  capabilities.step.root,
+  createCardStep(capabilities.verdict.blocking).root,
+  createSsdStep().root,
+  createThroughputStep().root,
+  createIdentityStep().root,
+  createPersistenceStep().root,
+  createJournalSection(),
+  h('a', { class: 'btn', href: base }, "Retour à l'accueil de l'appli"),
+);
+
+state.journal.onChange(updateBanner);
+updateBanner();
+
+void registerServiceWorker();

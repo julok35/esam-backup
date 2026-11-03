@@ -1,0 +1,350 @@
+/*
+ * Styles propres à la page de test (complètent src/ui/base.css).
+ * Étapes repliables, gros titres à toucher, badges lisibles en plein soleil comme de nuit.
+ */
+
+.page-header h1 {
+  margin-top: 0;
+}
+
+.banner {
+  background: var(--danger);
+  color: #111111;
+  font-weight: 800;
+  font-size: 1.1rem;
+  border-radius: var(--radius);
+  padding: var(--gap);
+}
+
+.intro {
+  gap: 8px;
+}
+
+.step {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.step[open] {
+  border-color: var(--focus);
+}
+
+.step > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px var(--gap);
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: 800;
+  touch-action: manipulation;
+}
+
+.step > summary::-webkit-details-marker {
+  display: none;
+}
+
+.step-num {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 900;
+}
+
+.step-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-status {
+  flex: none;
+}
+
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 var(--gap) var(--gap);
+}
+
+.step-body h3 {
+  font-size: 1.1rem;
+  margin: 8px 0 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border: 2px solid var(--border);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.badge-ok {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #06210f;
+}
+
+.badge-fail {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #1d0505;
+}
+
+.badge-warn {
+  background: var(--warn);
+  border-color: var(--warn);
+  color: #2a2000;
+}
+
+.badge-na {
+  color: var(--text-muted);
+}
+
+.badge-running {
+  border-color: var(--focus);
+  color: var(--focus);
+}
+
+.badge-todo {
+  color: var(--text);
+}
+
+.status-neutral {
+  border-color: var(--focus);
+  color: var(--text);
+}
+
+.result:empty {
+  display: none;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lines {
+  margin: 0;
+  padding-left: 1.3em;
+  overflow-wrap: anywhere;
+}
+
+.caps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.caps li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.caps .badge {
+  min-width: 56px;
+  text-align: center;
+}
+
+.cap-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cap-value {
+  display: block;
+}
+
+.device {
+  font-weight: 700;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.select {
+  min-height: var(--touch);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progress[hidden] {
+  display: none;
+}
+
+.progress progress {
+  width: 100%;
+  height: 22px;
+  accent-color: var(--primary);
+}
+
+.progress-label {
+  font-weight: 700;
+}
+
+.raw > summary,
+.fallback > summary {
+  cursor: pointer;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  color: var(--focus);
+}
+
+.fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.fallback[open] > *:not(summary) {
+  margin-top: 12px;
+}
+
+.raw pre {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 50vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+}
+
+.error-box {
+  border: 2px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.error-advice {
+  font-weight: 700;
+}
+
+.warn-text {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.reminder {
+  border-left: 4px solid var(--ok);
+  padding-left: 12px;
+  font-weight: 700;
+}
+
+.instructions {
+  border-left: 4px solid var(--primary);
+  padding-left: 12px;
+  font-size: 1.1rem;
+}
+
+table.kv,
+table.rates {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+table.kv th,
+table.kv td,
+table.rates th,
+table.rates td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+table.kv th {
+  width: 42%;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+table.rates td:nth-child(2) {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+table.rates small {
+  display: block;
+}
+
+.row-fail td {
+  color: var(--danger);
+}
+
+.btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-grid .btn {
+  font-size: 1rem;
+  padding: 10px;
+}
+
+.journal-list {
+  margin: 0;
+  padding-left: 1.6em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+[hidden] {
+  display: none !important;
+}
